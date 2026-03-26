@@ -1,15 +1,15 @@
 # video-note-renderer
 
-Turn a Bilibili or YouTube lecture, livestream replay, tutorial, or technical talk into a structured Chinese LaTeX note and rendered PDF.
+把 Bilibili 或 YouTube 上的讲座、直播回放、教程、技术分享视频，整理成结构化的中文 LaTeX 笔记，并最终渲染为 PDF。
 
-The skill is designed for long-form video note production with:
+这个 skill 面向长视频笔记生产，默认工作流包括：
 
-- ASR via `faster-whisper` using `whisper-large-v3`
-- OCR via `PaddleOCR` using `PP-OCRv5`
-- figure extraction from key video frames
-- a compileable LaTeX output and final PDF
+- 使用 `faster-whisper` + `whisper-large-v3` 做语音转文字
+- 使用 `PaddleOCR` + `PP-OCRv5` 做画面 OCR
+- 从视频中抽取关键帧作为插图
+- 输出可编译的 LaTeX 文稿和最终 PDF
 
-## Repository Layout
+## 仓库结构
 
 ```text
 skills/
@@ -20,9 +20,9 @@ skills/
     runtime/
 ```
 
-## Install
+## 安装
 
-If you already have the Codex skill installer, install this skill from GitHub with:
+如果你已经安装了 Codex 自带的 skill 安装器，可以直接从 GitHub 安装：
 
 ```bash
 python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
@@ -30,17 +30,17 @@ python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-githu
   --path skills/video-note-renderer
 ```
 
-After installation, restart Codex to load the new skill.
+安装完成后，重启 Codex 以加载这个 skill。
 
-## Runtime Setup
+## 运行时环境
 
-The runtime helpers live under:
+运行时脚本位于：
 
 ```bash
 skills/video-note-renderer/runtime/
 ```
 
-From an installed skill directory:
+安装后的典型使用方式：
 
 ```bash
 cd ~/.codex/skills/video-note-renderer/runtime
@@ -48,8 +48,8 @@ cd ~/.codex/skills/video-note-renderer/runtime
 source ./env.sh
 ```
 
-## Notes
+## 说明
 
-- This repository intentionally excludes local caches, virtual environments, transcripts, downloaded videos, and model weights.
-- No API keys are required for the default local workflow.
-- For Bilibili, high-resolution formats may require browser cookies.
+- 本仓库刻意排除了本地缓存、虚拟环境、转写结果、下载视频和模型权重，不会把这些内容提交到 GitHub。
+- 默认本地工作流不依赖任何 API Key。
+- 对于 Bilibili，高分辨率视频流可能需要浏览器 cookies 才能下载。
