@@ -7,6 +7,13 @@ Default stack:
 - ASR: `faster-whisper` with `whisper-large-v3`
 - OCR: `PaddleOCR` with `PP-OCRv5_server`
 
+Model execution policy:
+
+- Any model-backed step should prefer GPU by default.
+- Whisper transcription should run on `--device cuda` whenever a usable GPU is present.
+- Favor larger GPU batch sizes first and only back off when the runtime fails or runs out of memory.
+- Fall back to CPU only when GPU is unavailable or demonstrably failing.
+
 Setup:
 
 ```bash
@@ -37,6 +44,7 @@ Helpers:
 - `transcribe_with_faster_whisper.py`
 - `run_ppocrv5.py`
 - `merge_chunked_transcripts.py`
+- `resolve_dlpanda.py`
 
 Example:
 

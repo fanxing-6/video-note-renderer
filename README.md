@@ -1,6 +1,6 @@
 # video-note-renderer
 
-把 Bilibili 或 YouTube 上的讲座、直播回放、教程、技术分享视频，整理成结构化的中文 LaTeX 笔记，并最终渲染为 PDF。
+把 Bilibili、YouTube、TikTok 或 Douyin 上的讲座、直播回放、教程、技术分享视频，整理成结构化的中文 LaTeX 笔记，并最终渲染为 PDF。
 
 这个 skill 面向长视频笔记生产，默认工作流包括：
 
@@ -53,3 +53,4 @@ source ./env.sh
 - 本仓库刻意排除了本地缓存、虚拟环境、转写结果、下载视频和模型权重，不会把这些内容提交到 GitHub。
 - 默认本地工作流不依赖任何 API Key。
 - 对于 Bilibili，高分辨率视频流可能需要浏览器 cookies 才能下载。
+- 对于 TikTok / Douyin，默认通过 `dlpanda` 解析 HTML 并提取直连媒体 URL，不依赖登录 cookies。

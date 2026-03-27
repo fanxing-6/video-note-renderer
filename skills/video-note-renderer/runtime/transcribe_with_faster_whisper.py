@@ -70,6 +70,10 @@ def transcribe_with_optional_batching(
     args: argparse.Namespace,
     runtime_device: str,
 ):
+    chunk_length = args.chunk_length
+    if chunk_length is None and runtime_device == "cuda":
+        chunk_length = 30
+
     kwargs = dict(
         language=args.language,
         beam_size=args.beam_size,
@@ -78,13 +82,13 @@ def transcribe_with_optional_batching(
         vad_filter=True,
         vad_parameters={"min_silence_duration_ms": args.min_silence_ms},
         condition_on_previous_text=args.condition_on_previous_text,
-        chunk_length=args.chunk_length,
+        chunk_length=chunk_length,
         log_progress=args.log_progress,
     )
 
     requested_batch_size = args.batch_size
     if requested_batch_size is None:
-        requested_batch_size = 16 if runtime_device == "cuda" else 1
+        requested_batch_size = 32 if runtime_device == "cuda" else 1
 
     if requested_batch_size <= 1:
         return model.transcribe(str(args.input), **kwargs), 1

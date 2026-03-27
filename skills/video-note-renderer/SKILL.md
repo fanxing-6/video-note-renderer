@@ -1,11 +1,11 @@
 ---
 name: video-note-renderer
-description: Generate a professional, figure-rich LaTeX course note and final PDF from a Bilibili or YouTube lecture, tutorial, technical talk, or livestream replay. Use when the user provides a Bilibili or YouTube URL and wants structured Chinese notes that combine the video's title, cover, key frames, charts, formulas, code, subtitle or speech-to-text explanations, and a final synthesis chapter, with the output delivered as a complete `.tex` file plus a rendered PDF.
+description: Generate a professional, figure-rich LaTeX course note and final PDF from a Bilibili, YouTube, TikTok, or Douyin lecture, tutorial, technical talk, analytical video, or livestream replay. Use when the user provides one of those video URLs and wants structured Chinese notes that combine the video's title, cover, key frames, charts, formulas, code, subtitle or speech-to-text explanations, and a final synthesis chapter, with the output delivered as a complete `.tex` file plus a rendered PDF.
 ---
 
 # Video Note Renderer
 
-Use this skill to turn a Bilibili or YouTube video into a complete, compileable `.tex` note and a rendered PDF.
+Use this skill to turn a Bilibili, YouTube, TikTok, or Douyin video into a complete, compileable `.tex` note and a rendered PDF.
 
 ## Runtime Baseline
 
@@ -21,8 +21,17 @@ Runtime helpers live in `runtime/`:
 - `transcribe_with_faster_whisper.py`
 - `run_ppocrv5.py`
 - `merge_chunked_transcripts.py`
+- `resolve_dlpanda.py`
 
 Start from this stack unless the current media demonstrably requires a different tool.
+
+### Model Execution Policy
+
+Any model-backed step should prefer GPU by default.
+
+- Run Whisper on `--device cuda` whenever a usable GPU is present.
+- Favor larger GPU batch sizes first and only back off if the runtime fails or runs out of memory.
+- Only fall back to CPU when GPU is unavailable or demonstrably failing.
 
 ## Goal
 
@@ -55,6 +64,14 @@ The output must:
 - note that higher resolutions on Bilibili may require cookies
 - do not use danmaku as a teaching source
 
+### TikTok / Douyin
+
+- do not make logged-in platform extraction the primary path
+- resolve the share link through `runtime/resolve_dlpanda.py`
+- fetch `dlpanda` homepage, extract the hidden `t0ken`, request the result HTML, and parse the direct media links
+- prefer the direct playable media URL from the result HTML over the website's proxy download endpoint
+- use the downloaded local MP4 as the source for transcription and frame extraction
+
 ## Source Acquisition
 
 1. Inspect metadata first.
@@ -70,6 +87,7 @@ The output must:
    - YouTube manual subtitles
    - YouTube auto subtitles if no manual track is suitable
    - Bilibili CC subtitles
+   - TikTok/Douyin local speech-to-text after resolving the direct video link
    - local speech-to-text using `runtime/transcribe_with_faster_whisper.py`
 
 4. Prefer the best usable video file for frame extraction.
@@ -88,7 +106,7 @@ python runtime/transcribe_with_faster_whisper.py \
   --model large-v3 \
   --language zh \
   --device cuda \
-  --batch-size 16 \
+  --batch-size 32 \
   --output-dir transcript
 ```
 
@@ -96,9 +114,28 @@ For long recordings, chunk the audio and merge later:
 
 ```bash
 ffmpeg -i audio.wav -f segment -segment_time 1800 -c copy audio_chunks/chunk_%02d.wav -y
-python runtime/transcribe_with_faster_whisper.py audio_chunks/chunk_00.wav --model large-v3 --language zh --device cuda --batch-size 16 --output-dir chunk_transcripts
+python runtime/transcribe_with_faster_whisper.py audio_chunks/chunk_00.wav --model large-v3 --language zh --device cuda --batch-size 32 --output-dir chunk_transcripts
 python runtime/merge_chunked_transcripts.py chunk_transcripts --stem merged
 ```
+
+## TikTok / Douyin Resolution
+
+Use `runtime/resolve_dlpanda.py` when the source is TikTok or Douyin.
+
+```bash
+python runtime/resolve_dlpanda.py \
+  "https://v.douyin.com/xxxxxxxx/" \
+  --save-html dlpanda-result.html \
+  --download-video input.mp4
+```
+
+The helper will:
+
+- fetch `https://dlpanda.com/`
+- extract the hidden `t0ken`
+- request the resolved HTML result page
+- parse the direct `video_url`, `audio_url`, proxy URL, and suggested filename
+- optionally download the direct MP4 locally
 
 ## OCR
 
@@ -200,6 +237,7 @@ When responding with final artifact locations:
 
 - always include the local filesystem paths for the generated outputs
 - if running inside WSL, also provide Windows File Explorer paths that can be opened directly, using `wslpath -w`
+- derive the Windows path with `wslpath -w <linux_path>` rather than hand-writing it
 - for example, convert `/root/tmp/example/output.pdf` into a path such as `\\wsl.localhost\Ubuntu-22.04\root\tmp\example\output.pdf`
 - prioritize the PDF and `.tex` paths, and include transcript or figure directories when they are part of the deliverable
 
